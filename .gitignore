@@ -52,8 +52,8 @@ embeddings.yaml
 # Screenshots
 screenshot_*.png
 
-# HTML reports
-security_report.html
+# Temporary HTML reports (keep security_report.html as sample)
+# security_report.html
 
 # ============================================
 # PERSONAL DATA (PRIVACY)

@@ -75,9 +75,10 @@ class LiveFaceAnalyzer:
         # Attack state
         self.patch_attack_active = False
         self.noise_attack_active = False
+        self.occlusion_attack_active = False  # NEW: Full occlusion
         self.patch_position = "center"  # center, forehead, eyes
-        self.attack_intensity = 0.3  # 0.1 to 1.0
-        self.noise_epsilon = 0.05  # Noise intensity
+        self.attack_intensity = 0.5  # 0.1 to 1.0 (start higher)
+        self.noise_epsilon = 0.3  # INCREASED: Noise intensity
         
         # Adversarial patch (generated or loaded)
         self.adversarial_patch = None
@@ -93,6 +94,7 @@ class LiveFaceAnalyzer:
         print("\nControls:")
         print("  [a] Toggle Adversarial Patch")
         print("  [n] Toggle Gaussian Noise")
+        print("  [o] Toggle Occlusion Attack (covers eyes/nose/mouth)")
         print("  [p] Change patch position")
         print("  [+] Increase attack intensity")
         print("  [-] Decrease attack intensity")
@@ -260,11 +262,11 @@ class LiveFaceAnalyzer:
         return best_match, best_similarity
     
     def apply_adversarial_patch(self, frame, face_bbox):
-        """Apply adversarial patch to face region"""
+        """Apply adversarial patch to face region - STRONGER VERSION"""
         x, y, w, h = face_bbox[:4].astype(int)
         
-        # Calculate patch size based on face size and intensity
-        patch_size = int(min(w, h) * self.attack_intensity)
+        # LARGER patch size - covers more of face
+        patch_size = int(min(w, h) * self.attack_intensity * 1.5)  # 1.5x larger
         patch_resized = cv2.resize(self.adversarial_patch, (patch_size, patch_size))
         
         # Calculate patch position
@@ -273,10 +275,10 @@ class LiveFaceAnalyzer:
             py = y + h // 2 - patch_size // 2
         elif self.patch_position == "forehead":
             px = x + w // 2 - patch_size // 2
-            py = y + int(h * 0.1)
+            py = y + int(h * 0.05)  # Higher up
         elif self.patch_position == "eyes":
             px = x + w // 2 - patch_size // 2
-            py = y + int(h * 0.35)
+            py = y + int(h * 0.25)  # Cover eyes better
         else:
             px = x + w // 2 - patch_size // 2
             py = y + h // 2 - patch_size // 2
@@ -285,20 +287,40 @@ class LiveFaceAnalyzer:
         px = max(0, min(px, frame.shape[1] - patch_size))
         py = max(0, min(py, frame.shape[0] - patch_size))
         
-        # Apply patch with some blending
-        alpha = 0.85
+        # Apply patch with FULL opacity (no blending)
+        alpha = 1.0  # Full replacement for stronger effect
         try:
             roi = frame[py:py+patch_size, px:px+patch_size]
             if roi.shape[:2] == patch_resized.shape[:2]:
-                frame[py:py+patch_size, px:px+patch_size] = \
-                    cv2.addWeighted(patch_resized, alpha, roi, 1-alpha, 0)
+                frame[py:py+patch_size, px:px+patch_size] = patch_resized
         except:
             pass
         
         return frame
     
+    def apply_occlusion_attack(self, frame, face_bbox):
+        """Apply black occlusion bars over critical face areas"""
+        x, y, w, h = face_bbox[:4].astype(int)
+        
+        # Calculate bar thickness based on intensity
+        bar_height = int(h * 0.15 * self.attack_intensity)
+        
+        # Cover EYES (most critical for recognition)
+        eye_y = y + int(h * 0.3)
+        cv2.rectangle(frame, (x, eye_y), (x + w, eye_y + bar_height), (0, 0, 0), -1)
+        
+        # Cover NOSE
+        nose_y = y + int(h * 0.5)
+        cv2.rectangle(frame, (x, nose_y), (x + w, nose_y + bar_height), (0, 0, 0), -1)
+        
+        # Cover MOUTH
+        mouth_y = y + int(h * 0.7)
+        cv2.rectangle(frame, (x, mouth_y), (x + w, mouth_y + bar_height), (0, 0, 0), -1)
+        
+        return frame
+    
     def apply_gaussian_noise(self, frame, face_bbox):
-        """Apply Gaussian noise to face region (FGSM-style)"""
+        """Apply STRONG Gaussian noise to face region (FGSM-style)"""
         x, y, w, h = face_bbox[:4].astype(int)
         
         # Ensure bounds
@@ -310,9 +332,9 @@ class LiveFaceAnalyzer:
         # Extract face region
         face_roi = frame[y:y2, x:x2].copy()
         
-        # Generate noise
-        noise = np.random.normal(0, 255 * self.noise_epsilon * self.attack_intensity, 
-                                face_roi.shape).astype(np.float32)
+        # Generate STRONGER noise
+        noise_strength = 255 * self.noise_epsilon * self.attack_intensity * 2  # 2x stronger
+        noise = np.random.normal(0, noise_strength, face_roi.shape).astype(np.float32)
         
         # Add noise to face
         noisy_face = face_roi.astype(np.float32) + noise
@@ -345,6 +367,9 @@ class LiveFaceAnalyzer:
         elif self.noise_attack_active:
             status = f"NOISE ATTACK: ON (eps={self.noise_epsilon:.2f})"
             color = (0, 165, 255)
+        elif self.occlusion_attack_active:
+            status = f"OCCLUSION ATTACK: ON"
+            color = (255, 0, 255)  # Magenta
         else:
             status = "NO ATTACK"
             color = (0, 255, 0)
@@ -450,19 +475,22 @@ class LiveFaceAnalyzer:
             # Detect faces
             _, faces = self.detector.detect(frame)
             
-            attacked = self.patch_attack_active or self.noise_attack_active
+            attacked = self.patch_attack_active or self.noise_attack_active or self.occlusion_attack_active
             
             if faces is not None and len(faces) > 0:
                 for face in faces:
                     # Apply attacks to display frame
                     if self.patch_attack_active:
                         display_frame = self.apply_adversarial_patch(display_frame, face)
-                        # Also attack the recognition frame to show real effect
                         recognition_frame = self.apply_adversarial_patch(recognition_frame, face)
                     
                     if self.noise_attack_active:
                         display_frame = self.apply_gaussian_noise(display_frame, face)
                         recognition_frame = self.apply_gaussian_noise(recognition_frame, face)
+                    
+                    if self.occlusion_attack_active:
+                        display_frame = self.apply_occlusion_attack(display_frame, face)
+                        recognition_frame = self.apply_occlusion_attack(recognition_frame, face)
                     
                     # Extract features and recognize from attacked frame
                     try:
@@ -501,15 +529,24 @@ class LiveFaceAnalyzer:
             
             elif key == ord('a'):
                 self.patch_attack_active = not self.patch_attack_active
-                self.noise_attack_active = False  # Only one attack at a time
+                self.noise_attack_active = False
+                self.occlusion_attack_active = False
                 status = "ON" if self.patch_attack_active else "OFF"
                 print(f"🎯 Adversarial Patch: {status}")
             
             elif key == ord('n'):
                 self.noise_attack_active = not self.noise_attack_active
-                self.patch_attack_active = False  # Only one attack at a time
+                self.patch_attack_active = False
+                self.occlusion_attack_active = False
                 status = "ON" if self.noise_attack_active else "OFF"
                 print(f"📊 Gaussian Noise Attack: {status}")
+            
+            elif key == ord('o'):
+                self.occlusion_attack_active = not self.occlusion_attack_active
+                self.patch_attack_active = False
+                self.noise_attack_active = False
+                status = "ON" if self.occlusion_attack_active else "OFF"
+                print(f"🚫 Occlusion Attack: {status}")
             
             elif key == ord('p'):
                 positions = ["center", "forehead", "eyes"]

@@ -137,6 +137,73 @@ PyYAML>=6.0
 
 ---
 
+## 🚀 How to Run
+
+### Step-by-Step Instructions
+
+#### 1️⃣ Clone and Setup
+```bash
+# Clone the repository
+git clone https://github.com/Amgothvijaykumar/ARAVM-Adversarial-Robustness-Analyzer-for-Vision-Models-.git
+cd ARAVM-Adversarial-Robustness-Analyzer-for-Vision-Models-
+
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install all dependencies
+pip install -r requirements.txt
+```
+
+#### 2️⃣ Run Image Classification Security Audit
+
+**Option A: Quick Test with Your Own Image**
+```bash
+# Place your image in the datasets folder, then run:
+python run_with_image.py datasets/your_image.jpg
+```
+
+**Option B: Full Security Audit (All Attack Levels)**
+```bash
+python main_analyzer.py
+```
+
+This will:
+- Load a pre-trained ResNet-50 model
+- Run Level 1-4 security attacks (FGSM, PGD, ROA, etc.)
+- Generate `security_report.html` with full analysis
+- Create visualization images (`aravm_dashboard.png`, heatmaps)
+
+#### 3️⃣ Run Face Recognition Security Audit
+
+```bash
+# Step 1: Download face detection models
+cd facedetection
+python download_models.py
+cd ..
+
+# Step 2: Create folders for team members
+mkdir -p facedetection/group_members/YourName
+
+# Step 3: Capture face photos (takes 3-5 photos per person)
+python capture_faces.py
+
+# Step 4: Train the face recognition model
+python facedetection/train_face_recognition.py
+
+# Step 5: Run live face analyzer with adversarial attacks
+python live_face_analyzer.py
+```
+
+#### 📁 Output Files Generated
+| File | Description |
+|------|-------------|
+| `security_report.html` | 📄 Complete HTML security report |
+| `aravm_dashboard.png` | 📊 Visual comparison of all attacks |
+| `level1_heatmap_comparison.png` | 🔥 Gradient heatmaps before/after attack |
+
+---
+
 ## � Part 1: Image Classification Security Audit
 
 ### Option A: Quick Test with Sample Image
