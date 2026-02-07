@@ -110,8 +110,8 @@ Defense: Evaluate face matching under attack conditions
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ARAVM.git
-cd ARAVM
+git clone https://github.com/Amgothvijaykumar/ARAVM-Adversarial-Robustness-Analyzer-for-Vision-Models-.git
+cd ARAVM-Adversarial-Robustness-Analyzer-for-Vision-Models-
 
 # Create virtual environment
 python -m venv venv
