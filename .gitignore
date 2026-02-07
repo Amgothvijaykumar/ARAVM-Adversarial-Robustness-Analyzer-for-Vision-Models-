@@ -23,25 +23,42 @@ build/
 .DS_Store
 Thumbs.db
 
-# Large model files (download separately)
+# ============================================
+# MODEL WEIGHTS & TRAINED DATA (DO NOT PUSH)
+# ============================================
 *.onnx
 *.pth
 *.pt
 *.h5
-
-# Generated outputs (can be regenerated)
-*.png
-*.jpg
-*.jpeg
-!datasets/*.png
-!datasets/*.jpg
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.safetensors
 
 # Embeddings (contains personal face data)
 embeddings.pkl
 embeddings.yml
+embeddings.yaml
+
+# ============================================
+# GENERATED FILES (CAN BE REGENERATED)
+# ============================================
+*.png
+*.jpg
+*.jpeg
+!datasets/.gitkeep
 
 # Screenshots
 screenshot_*.png
+
+# HTML reports
+security_report.html
+
+# ============================================
+# PERSONAL DATA (PRIVACY)
+# ============================================
+facedetection/group_members/
 
 # Logs
 *.log
