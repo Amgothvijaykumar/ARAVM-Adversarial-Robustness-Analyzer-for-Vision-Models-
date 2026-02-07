@@ -1,0 +1,50 @@
+# Virtual Environment
+venv/
+env/
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large model files (download separately)
+*.onnx
+*.pth
+*.pt
+*.h5
+
+# Generated outputs (can be regenerated)
+*.png
+*.jpg
+*.jpeg
+!datasets/*.png
+!datasets/*.jpg
+
+# Embeddings (contains personal face data)
+embeddings.pkl
+embeddings.yml
+
+# Screenshots
+screenshot_*.png
+
+# Logs
+*.log
+
+# Jupyter
+.ipynb_checkpoints/

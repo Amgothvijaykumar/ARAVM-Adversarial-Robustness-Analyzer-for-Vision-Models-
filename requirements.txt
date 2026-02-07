@@ -1,0 +1,29 @@
+# =============================================================================
+# ARAVM: Adversarial Robustness Analyzer for Vision Models
+# Requirements for the 4-Level Security Evaluation Framework
+# =============================================================================
+
+# Core AI Frameworks
+torch>=1.12.0
+torchvision>=0.13.0
+numpy>=1.21.0
+
+# Adversarial & Robustness Libraries (ART + Captum)
+adversarial-robustness-toolbox>=1.11.0
+captum>=0.5.0
+
+# Image Processing & Visualization
+opencv-python>=4.5.0
+matplotlib>=3.5.0
+scipy>=1.7.0
+pillow>=9.0.0
+
+# Analysis & Reporting
+pandas>=1.3.0
+tqdm>=4.62.0
+
+# Optional: For Jupyter notebooks
+ipywidgets>=7.6.0
+opencv-contrib-python>=4.8.0
+numpy>=1.24.0
+PyYAML>=6.0
